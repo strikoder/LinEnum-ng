@@ -1,6 +1,7 @@
 # LinEnum-ng
 
 > A focused, stable, OSCP-oriented Linux privilege escalation enumeration script.
+![LinEnum](https://github.com/user-attachments/assets/a702bc2c-dd14-4fba-927c-f8d505e5df2b)
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" />
@@ -177,6 +178,6 @@ The single quotes around `'EOF'` are important — they prevent the shell from t
 
 ## ⭐ Support
 
-If LinEnum-ng helped you pop a shell, pass the OSCP, or saved you time on a CTF — consider leaving a star. It helps others find the tool and keeps the project going.
+If LinEnum-ng helped you pop a shell, pass the OSCP, or saved you time on a CTF, consider leaving a star. It helps others find the tool and keeps the project going.
 
 *LinEnum-ng by [Strikoder](https://github.com/strikoder)*
