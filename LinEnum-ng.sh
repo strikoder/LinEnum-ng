@@ -280,6 +280,19 @@ else
     echo -e "${GREEN}sudo not found or not accessible${NC}"
 fi
 
+# Check for Copy Fail (CVE-2026-31431)
+echo -e "\n${YELLOW}[+] ${NC}Checking for Copy Fail (CVE-2026-31431) [kernel 4.14 - 6.18.21]:"
+AEAD=$(grep -c authencesn /proc/crypto 2>/dev/null)
+SUID=$(find /usr/bin/su -perm -4000 2>/dev/null | wc -l)
+SPLICE=$(python3 -c "import os; os.splice; print(1)" 2>/dev/null)
+if [ "$AEAD" -gt 0 ] && [ "$SUID" -gt 0 ] && [ "$SPLICE" = "1" ]; then
+    echo -e "\033[1;31;103mVulnerable to Copy Fail - CVE-2026-31431\033[0m"
+    echo -e "${LMAGENTA}PoC: https://github.com/theori-io/copy-fail-CVE-2026-31431${NC}"
+    echo -e "${LMAGENTA}Fix: echo 'install algif_aead /bin/false' > /etc/modprobe.d/disable-algif-aead.conf && rmmod algif_aead 2>/dev/null${NC}"
+else
+    echo -e "${GREEN}Not vulnerable (conditions not met)${NC}"
+fi
+
 echo -e "\n${YELLOW}[+] ${NC}Checking for compilers (kernel exploit compilation):"
 for compiler in gcc cc g++ python python3 perl ruby make; do
     path=$(which $compiler 2>/dev/null)
