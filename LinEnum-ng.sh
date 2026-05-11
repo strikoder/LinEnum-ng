@@ -1077,6 +1077,37 @@ find /var/www /opt -name "*.php" -type f 2>/dev/null -exec grep -l "mysql_connec
     grep -i "password\|user" "$php" 2>/dev/null | head -3
 done
 
+echo -e "\n${YELLOW}[+] ${NC}SNMP config credentials (/etc/snmp/snmpd.conf):"
+if [ -r /etc/snmp/snmpd.conf ]; then
+    snmp_creds=$(grep -iE "createUser|community|rocommunity|rwcommunity|pass|auth|priv" /etc/snmp/snmpd.conf 2>/dev/null | grep -v "^#")
+    if [ -n "$snmp_creds" ]; then
+        echo -e "\033[1;31;103mSNMP credentials/config found!\033[0m"
+        echo -e "${CYAN}$snmp_creds${NC}"
+    else
+        echo -e "${GREEN}No interesting SNMP entries found${NC}"
+    fi
+else
+    echo -e "${GREEN}Cannot read /etc/snmp/snmpd.conf (or not present)${NC}"
+fi
+
+echo -e "\n${YELLOW}[+] ${NC}WordPress config credentials (wp-config.php):"
+wp_configs=$(find / -name "wp-config.php" -type f 2>/dev/null | head -10)
+if [ -n "$wp_configs" ]; then
+    echo -e "\033[1;31;103mwp-config.php file(s) found!\033[0m"
+    for wpconf in $wp_configs; do
+        echo -e "${LRED}$wpconf${NC}"
+        if [ -r "$wpconf" ]; then
+            grep -E "DB_NAME|DB_USER|DB_PASSWORD|DB_HOST|table_prefix|AUTH_KEY|SECURE_AUTH_KEY" "$wpconf" 2>/dev/null | grep -v "^#" | while read line; do
+                echo -e "${CYAN}  $line${NC}"
+            done
+        else
+            echo -e "${YELLOW}  Not readable${NC}"
+        fi
+    done
+else
+    echo -e "${GREEN}No wp-config.php found${NC}"
+fi
+
 echo -e "\n${YELLOW}[+] ${NC}API keys and tokens:"
 api_hits=$(grep -rih \
     --include="*.conf" --include="*.config" --include="*.cfg" \
