@@ -698,10 +698,43 @@ echo -e "\n${YELLOW}[+] ${NC}Routing table:"
 route -n 2>/dev/null || ip route 2>/dev/null
 
 echo -e "\n${YELLOW}[+] ${NC}ARP cache:"
-arp -a 2>/dev/null || ip n 2>/dev/null
+if command -v arp >/dev/null 2>&1; then
+    arp -a 2>/dev/null
+elif command -v ip >/dev/null 2>&1; then
+    ip n 2>/dev/null
+else
+    echo -e "${GREEN}No arp/ip utility available${NC}"
+fi
+
+echo -e "\n${YELLOW}[+] ${NC}Raw ARP table (/proc/net/arp):"
+if [ -r /proc/net/arp ]; then
+    cat /proc/net/arp 2>/dev/null
+else
+    echo -e "${GREEN}Cannot read /proc/net/arp${NC}"
+fi
 
 echo -e "\n${YELLOW}[+] ${NC}DNS servers:"
-grep "nameserver" /etc/resolv.conf 2>/dev/null
+if [ -r /etc/resolv.conf ]; then
+    grep "nameserver" /etc/resolv.conf 2>/dev/null
+
+    echo -e "\n${YELLOW}[+] ${NC}Full resolv.conf contents:"
+    cat /etc/resolv.conf 2>/dev/null
+
+    # Detect unusual/non-default resolver configuration
+    resolv_extra=$(grep -Ev '^\s*#|^\s*$|^\s*nameserver\s+' /etc/resolv.conf 2>/dev/null)
+
+    if [ -n "$resolv_extra" ]; then
+        echo -e "\033[1;31;103mInteresting /etc/resolv.conf detected - contains additional directives\033[0m"
+
+        echo -e "${LMAGENTA}Additional entries:${NC}"
+        echo "$resolv_extra"
+    fi
+else
+    echo -e "${GREEN}Cannot read /etc/resolv.conf${NC}"
+fi
+
+echo -e "\n${YELLOW}[+] ${NC}Host resolution entries (getent hosts):"
+getent hosts 2>/dev/null || echo -e "${GREEN}No hosts returned${NC}"
 
 echo -e "\n${YELLOW}[+] ${NC}Hosts file:"
 cat /etc/hosts 2>/dev/null | grep -v "^#"
