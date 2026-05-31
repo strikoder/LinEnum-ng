@@ -1520,6 +1520,233 @@ if [ -n "$USERNAME" ]; then
 fi
 
 # ============================================================================
+# ACCESSIBLE CONFIG FILES & DIRECTORIES
+# ============================================================================
+echo -e "\n${LBLUE}╔═══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${LBLUE}║ ACCESSIBLE CONFIG FILES & DIRECTORIES                     ║${NC}"
+echo -e "${LBLUE}╚═══════════════════════════════════════════════════════════╝${NC}"
+
+# ---- Known high-value config locations ----
+echo -e "\n${YELLOW}[+] ${NC}Checking known sensitive config files (read access):"
+
+sensitive_configs=(
+    "/etc/mysql/my.cnf"
+    "/etc/mysql/mysql.conf.d/mysqld.cnf"
+    "/etc/postgresql/*/main/pg_hba.conf"
+    "/etc/postgresql/*/main/postgresql.conf"
+    "/etc/redis/redis.conf"
+    "/etc/mongod.conf"
+    "/etc/mongodb.conf"
+    "/etc/nginx/nginx.conf"
+    "/etc/nginx/sites-enabled/*"
+    "/etc/apache2/apache2.conf"
+    "/etc/apache2/sites-enabled/*"
+    "/etc/httpd/conf/httpd.conf"
+    "/etc/php*/*/php.ini"
+    "/etc/php.ini"
+    "/etc/ssh/sshd_config"
+    "/etc/vsftpd.conf"
+    "/etc/proftpd/proftpd.conf"
+    "/etc/ldap/ldap.conf"
+    "/etc/openldap/ldap.conf"
+    "/etc/environment"
+    "/etc/profile"
+    "/etc/bash.bashrc"
+    "/proc/net/fib_trie"
+)
+
+found_sensitive=0
+for cfg in "${sensitive_configs[@]}"; do
+    # Use glob expansion
+    for expanded in $cfg; do
+        if [ -r "$expanded" ] 2>/dev/null; then
+            echo -e "${LRED}[READABLE] $expanded${NC}"
+            # Flag if it contains credential-like strings
+            cred_hit=$(grep -iE "password|passwd|secret|token|api.?key|credential|username|user=" "$expanded" 2>/dev/null | grep -v "^#" | head -3)
+            if [ -n "$cred_hit" ]; then
+                echo -e "\033[1;31;103m  ^^^ Contains credential-like strings!\033[0m"
+                echo "$cred_hit" | while read line; do
+                    echo -e "${CYAN}    $line${NC}"
+                done
+            fi
+            found_sensitive=1
+        fi
+    done
+done
+
+if [ $found_sensitive -eq 0 ]; then
+    echo -e "${GREEN}No known sensitive config files readable${NC}"
+fi
+
+# ---- Config files readable in common app dirs ----
+echo -e "\n${YELLOW}[+] ${NC}Readable config files in common application directories:"
+
+app_dirs=(
+    "/opt"
+    "/srv"
+    "/var/www"
+    "/usr/local/etc"
+    "/app"
+    "/home"
+)
+
+for dir in "${app_dirs[@]}"; do
+    if [ -d "$dir" ]; then
+        readable=$(find "$dir" -maxdepth 5 \( -name "*.conf" -o -name "*.config" -o -name "*.cfg" \
+            -o -name "*.ini" -o -name "*.env" -o -name ".env" -o -name "*.yaml" -o -name "*.yml" \
+            -o -name "*.toml" -o -name "*.json" -o -name "*.properties" -o -name "*.xml" \
+            -o -name "*.php" -o -name ".htaccess" \) \
+            -readable -type f 2>/dev/null | head -20)
+        if [ -n "$readable" ]; then
+            echo -e "${CYAN}  $dir:${NC}"
+            echo "$readable" | while read f; do
+                echo -e "${LRED}    $f${NC}"
+                cred_hit=$(grep -iE "password|passwd|secret|token|api.?key|credential|AuthUserFile|DB_PASS|DB_USER|db_password|username|user=" "$f" 2>/dev/null | grep -v "^#" | head -2)
+                if [ -n "$cred_hit" ]; then
+                    echo -e "\033[1;31;103m      ^^^ Contains credential-like strings!\033[0m"
+                    echo "$cred_hit" | while read line; do
+                        echo -e "${CYAN}        $line${NC}"
+                    done
+                fi
+            done
+        fi
+    fi
+done
+
+# ---- Dot files in home directories ----
+echo -e "\n${YELLOW}[+] ${NC}Readable dot-config files in home directories:"
+
+dotfile_patterns=(
+    ".bash_history" ".zsh_history" ".sh_history"
+    ".bashrc" ".zshrc" ".profile"
+    ".netrc" ".pgpass" ".my.cnf" ".boto"
+    ".aws/credentials" ".aws/config"
+    ".docker/config.json"
+    ".git-credentials"
+    ".ssh/config" ".ssh/id_rsa" ".ssh/id_ecdsa" ".ssh/id_ed25519"
+    ".kube/config"
+    ".config/gcloud/credentials.db"
+    ".config/gcloud/application_default_credentials.json"
+)
+
+for homedir in /home/* /root; do
+    if [ -d "$homedir" ]; then
+        for dotfile in "${dotfile_patterns[@]}"; do
+            target="$homedir/$dotfile"
+            if [ -r "$target" ] 2>/dev/null; then
+                echo -e "${LRED}[READABLE] $target${NC}"
+                # Special loud alert for SSH keys and credential stores
+                case "$dotfile" in
+                    .ssh/id_rsa|.ssh/id_ecdsa|.ssh/id_ed25519)
+                        echo -e "\033[1;31;103m  ^^^ PRIVATE SSH KEY READABLE!\033[0m"
+                        head -3 "$target" 2>/dev/null | while read line; do
+                            echo -e "${CYAN}    $line${NC}"
+                        done
+                        ;;
+                    .netrc|.pgpass|.my.cnf|.boto|.aws/credentials|.git-credentials|.kube/config)
+                        echo -e "\033[1;31;103m  ^^^ CREDENTIAL FILE READABLE!\033[0m"
+                        grep -v "^#" "$target" 2>/dev/null | head -5 | while read line; do
+                            echo -e "${CYAN}    $line${NC}"
+                        done
+                        ;;
+                    *history)
+                        echo -e "${YELLOW}  ^^^ History file — check for passwords typed in commands:${NC}"
+                        grep -iE "pass|secret|token|curl.*-u|mysql.*-p|sshpass" "$target" 2>/dev/null | tail -5 | while read line; do
+                            echo -e "${CYAN}    $line${NC}"
+                        done
+                        ;;
+                esac
+            fi
+        done
+    fi
+done
+
+# ---- World-readable config files outside /tmp ----
+echo -e "\n${YELLOW}[+] ${NC}World-readable config/env files in non-standard paths (first 20):"
+world_readable=$(find / \( -path /proc -o -path /sys -o -path /dev -o -path /tmp \) -prune -o \
+    \( -name "*.conf" -o -name "*.env" -o -name ".env" -o -name "*.cfg" -o -name "*.ini" \
+    -o -name "*.php" -o -name ".htaccess" \) \
+    -perm -o+r -not -path "/etc/*" -not -path "/usr/share/*" -not -path "/usr/lib/*" \
+    -type f -print 2>/dev/null | head -20)
+
+if [ -n "$world_readable" ]; then
+    echo "$world_readable" | while read f; do
+        echo -e "${LRED}$f${NC}"
+        cred_hit=$(grep -iE "password|passwd|secret|token|api.?key|AuthUserFile|DB_PASS|DB_USER|db_password|username|user=" "$f" 2>/dev/null | grep -v "^#" | head -2)
+        if [ -n "$cred_hit" ]; then
+            echo -e "\033[1;31;103m  ^^^ Contains credential-like strings!\033[0m"
+            echo "$cred_hit" | while read line; do
+                echo -e "${CYAN}    $line${NC}"
+            done
+        fi
+    done
+else
+    echo -e "${GREEN}No notable world-readable config files found${NC}"
+fi
+
+
+# ---- Shell users cross-reference hunt ----
+echo -e "\n${YELLOW}[+] ${NC}Harvesting users with a login shell from /etc/passwd:"
+
+shell_users=()
+while IFS=: read -r uname _ _ _ _ _ ushell; do
+    case "$ushell" in
+        */bash|*/sh|*/zsh|*/fish|*/ksh|*/tcsh|*/csh|*/dash)
+            shell_users+=("$uname")
+            echo -e "${CYAN}  $uname ($ushell)${NC}"
+            ;;
+    esac
+done < /etc/passwd
+
+if [ ${#shell_users[@]} -eq 0 ]; then
+    echo -e "${GREEN}No users with login shells found${NC}"
+else
+    echo -e "\n${YELLOW}[+] ${NC}Hunting for shell usernames in config/web/app directories: ${CYAN}(may take a moment)${NC}"
+
+    hunt_dirs=(
+        "/var/www"
+        "/srv"
+        "/opt"
+        "/app"
+        "/usr/local/etc"
+        "/etc"
+        "/tmp"
+        "/var/backups"
+        "/var/lib"
+    )
+
+    for uname in "${shell_users[@]}"; do
+        user_hits=""
+        for dir in "${hunt_dirs[@]}"; do
+            [ -d "$dir" ] || continue
+            hits=$(grep -rIl "$uname" "$dir" 2>/dev/null | grep -vE "\.log$|/proc/|/sys/" | head -10)
+            [ -n "$hits" ] && user_hits+="$hits"$'\n'
+        done
+
+        if [ -n "$user_hits" ]; then
+            echo -e "\n${LRED}[HIT] Username '${uname}' found in:${NC}"
+            echo "$user_hits" | sort -u | while read f; do
+                [ -z "$f" ] && continue
+                echo -e "${LRED}    $f${NC}"
+                grep -n "$uname" "$f" 2>/dev/null | head -5 | while read match; do
+                    echo -e "${CYAN}      $match${NC}"
+                done
+            done
+        fi
+    done
+fi
+
+echo -e "\n${LMAGENTA}[!] USEFUL FOLLOW-UP COMMANDS:${NC}"
+echo -e "${CYAN}    # Grep a config file for secrets:${NC}"
+echo -e "${CYAN}    grep -iE 'password|secret|token|api.?key' <file>${NC}"
+echo -e ""
+echo -e "${CYAN}    # Find all .env files you can read:${NC}"
+echo -e "${CYAN}    find / -name '.env' -readable 2>/dev/null${NC}"
+echo -e ""
+echo -e "${CYAN}    # Find all readable YAML/JSON configs:${NC}"
+echo -e "${CYAN}    find / -readable \\( -name '*.yaml' -o -name '*.json' \\) -not -path '/proc/*' 2>/dev/null | head -30${NC}"
+
+# ============================================================================
 # FINAL SUMMARY
 # ============================================================================
 echo -e "\n${LBLUE}╔═══════════════════════════════════════════════════════════╗${NC}"
