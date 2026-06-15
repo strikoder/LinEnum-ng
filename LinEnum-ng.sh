@@ -38,7 +38,7 @@ echo "                             ▃███████▁                  
 echo "                            ▃██████▇▁                           ████████▄"
 echo "                            ▄██████▇                            ████████▄"
 echo "                            ▄█████▅▂                            ▅▇██████▄"
-echo -e "                            ▄█████▅      ${BGREEN}${BOLD}LinEnum-ng: ${WHITE}1.0.0${NC}${WHITE}       ▇██████▄"
+echo -e "                            ▄█████▅      ${BGREEN}${BOLD}LinEnum-ng: ${WHITE}1.0.1${NC}${WHITE}       ▇██████▄"
 echo -e "                            ▄█████▅     ${BGREEN}${BOLD}Developed by: ${WHITE}Strikoder${NC}${WHITE}  ▇██████▄"
 echo "                            ▄█████▅                              ▇██████▄"
 echo "                            ▄█████▅                              ▇██████▄"
