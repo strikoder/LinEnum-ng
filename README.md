@@ -1,10 +1,9 @@
 # LinEnum-ng
 
 > A focused, stable, OSCP-oriented Linux privilege escalation enumeration script.
-<img width="640" height="640" alt="LinEnum-ng" src="https://github.com/user-attachments/assets/bed1425d-3133-46c6-bf91-dd49ee8d47bf" />
+> <img width="640" height="640" alt="LinEnum-ng" src="https://github.com/user-attachments/assets/bed1425d-3133-46c6-bf91-dd49ee8d47bf" />
 
-<img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" /> <img src="https://img.shields.io/badge/target-Linux-orange?style=for-the-badge&logo=linux&logoColor=white" />
-
+<img src="https://img.shields.io/badge/version-1.0.1-blue?style=for-the-badge" /> <img src="https://img.shields.io/badge/target-Linux-orange?style=for-the-badge&logo=linux&logoColor=white" />
 
 ---
 
@@ -16,18 +15,16 @@ There are two well-known tools in this space: the original **LinEnum** and **lin
 
 LinEnum is the classic. It works, it's simple, and it's been around forever. But it's also showing its age:
 
-| | LinEnum | LinEnum-ng |
-|---|---|---|
-| Kernel CVEs | None | Copy Fail, PwnKit, Dirty Pipe, Dirty COW, Baron Samedit, eBPF |
-| Sudo CVEs | None | CVE-2019-18634, CVE-2025-32463, CVE-2023-3560, <1.8.28 ID bypass |
-| SUID/Sudo exploitation | Lists files only | GTFOBins cross-reference, world-writable SUID check |
-| Container detection | Docker only | Docker, LXC, Kubernetes (token, API server, namespace) |
-| Sudo with password | Interactive prompt | `-p` flag, non-interactive |
-| Group privesc | Basic listing | Docker, LXD, disk, adm, shadow -- each with inline exploitation steps |
-| Credential hunting | No | SNMP, AWS, API keys, WordPress, DB configs, git, htpasswd |
-| Username hunt | No | `-u` flag, searches filename and file content |
-| Password spray reminder | No | Prompts you to try found passwords against all users |
-| Color output | No | Red/yellow/green like linPEAS |
+|                         | LinEnum               | LinEnum-ng                                                              |
+| ----------------------- | --------------------- | ----------------------------------------------------------------------- |
+| Kernel CVE checks       | ❌ None               | ✅ PwnKit, Dirty Pipe, Dirty COW, Baron Samedit, eBPF, sudo CVEs        |
+| SUID exploitation hints | ❌ Lists only         | ✅ Cross-references full GTFOBins list with explanation                 |
+| Container detection     | ⚠️ Docker only        | ✅ Docker, LXC, **Kubernetes** (with token/API checks)                  |
+| Sudo with password      | ⚠️ Interactive prompt | ✅ Pass via `-p` flag, non-interactive                                  |
+| Username hunting        | ❌                    | ✅ `-u` flag: finds files by name and content                           |
+| Group privesc           | ⚠️ Basic              | ✅ Docker, LXD, disk, adm, shadow, video — each with exploitation steps |
+| Color output            | ❌                    | ✅ linPEAS-style color scheme                                           |
+| Password spray hint     | ❌                    | ✅ Reminds you to try found passwords against all users                 |
 
 ... more yet to come
 
@@ -73,11 +70,11 @@ The output is clean, color-coded, and structured so you can triage top-to-bottom
 ./LinEnum-ng.sh [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-p PASSWORD` | Supply a known password. Used for authenticated `sudo -l` and credential checks. |
+| Option        | Description                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| `-p PASSWORD` | Supply a known password. Used for authenticated `sudo -l` and credential checks.          |
 | `-u USERNAME` | Target a username. Hunts files named after or containing that user across the filesystem. |
-| `-h, --help` | Show help and usage examples. |
+| `-h, --help`  | Show help and usage examples.                                                             |
 
 ### Examples
 
@@ -124,14 +121,14 @@ The script runs top-to-bottom through these sections:
 
 ## Color Key
 
-| Color | Meaning |
-|-------|---------|
-| **Red text on yellow background** | Confirmed vulnerability or critical misconfiguration |
-| **Bright red** | Notable finding: group membership, sensitive file, writable path |
-| Yellow | Section headers and informational prompts |
-| Green | Clean / not vulnerable / check passed |
-| Cyan | Raw command output and data values |
-| Magenta | Exploitation steps, links, and remediation hints |
+| Color                             | Meaning                                                            |
+| --------------------------------- | ------------------------------------------------------------------ |
+| **Red text on yellow background** | Confirmed vulnerability or critical misconfiguration — act on this |
+| **Bright red**                    | Notable finding — group membership, sensitive file, writable path  |
+| 🟡 Yellow                         | Section headers and informational prompts                          |
+| 🟢 Green                          | Clean / not vulnerable / check passed                              |
+| 🔵 Cyan                           | Raw command output and data values                                 |
+| 🟣 Magenta                        | Exploitation steps, links, and remediation hints                   |
 
 ---
 
@@ -164,17 +161,17 @@ The single quotes around `'EOF'` are important. They prevent the shell from tryi
 
 ## Compared At a Glance
 
-| Feature | LinEnum | linPEAS | LinEnum-ng |
-|---------|---------|---------|------------|
-| Kernel CVE matching | No | Yes | Yes |
-| GTFOBins SUID/sudo cross-ref | No | Yes | Yes |
-| Kubernetes detection | No | Yes | Yes |
-| Non-interactive `-p` flag | No | Yes | Yes |
-| Username filesystem hunt | No | No | Yes |
-| Password spray reminder | No | No | Yes |
-| Color output | No | Yes | Yes |
-| Version stability | Yes | Changes frequently | Yes |
-| OSCP-scoped, no noise | Yes | Very verbose | Yes |
+| Feature                         | LinEnum | linPEAS               | LinEnum-ng |
+| ------------------------------- | ------- | --------------------- | ---------- |
+| Kernel CVE matching             | ❌      | ✅                    | ✅         |
+| GTFOBins SUID/sudo cross-ref    | ❌      | ✅                    | ✅         |
+| Kubernetes detection            | ❌      | ✅                    | ✅         |
+| Non-interactive `-p` flag       | ⚠️      | ✅                    | ✅         |
+| Username filesystem hunt        | ❌      | ❌                    | ✅         |
+| Password spray reminder & hints | ❌      | ❌                    | ✅         |
+| Color output                    | ❌      | ✅                    | ✅         |
+| Version stability               | ✅      | ⚠️ Changes frequently | ✅         |
+| OSCP-scoped, no noise           | ✅      | ⚠️ Very verbose       | ✅         |
 
 ---
 
@@ -182,4 +179,4 @@ The single quotes around `'EOF'` are important. They prevent the shell from tryi
 
 If LinEnum-ng helped you pop a shell, pass the OSCP, or saved you time on a CTF, consider leaving a star.
 
-*LinEnum-ng by [Strikoder](https://github.com/strikoder)*
+_LinEnum-ng by [Strikoder](https://github.com/strikoder)_
